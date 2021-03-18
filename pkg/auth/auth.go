@@ -65,10 +65,12 @@ func (c *ClusterConfig) loadConfig() error {
 	result, err := svc.DescribeCluster(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
+			log.WithField("cluster", c.ClusterName).Error(aerr.Error())
 			return errors.Wrap(err, aerr.Error())
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
+			log.WithField("cluster", c.ClusterName).Error(err.Error())
 			return errors.Wrap(err, err.Error())
 		}
 	}
@@ -180,7 +182,7 @@ func (c *ClientConfig) WithEmbeddedToken() (*ClientConfig, error) {
 
 	log.Info("Generating token")
 
-	gen, err := token.NewGenerator()
+	gen, err := token.NewGenerator(true, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get token generator")
 	}
@@ -191,7 +193,7 @@ func (c *ClientConfig) WithEmbeddedToken() (*ClientConfig, error) {
 	}
 
 	x := c.Client.AuthInfos[c.ContextName]
-	x.Token = tok
+	x.Token = tok.Token
 
 	log.WithField("token", tok).Debug("Successfully generated token")
 	return &clientConfigCopy, nil
